@@ -7,7 +7,6 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -29,7 +28,8 @@ public class Main extends ListenerAdapter {
                 .addEventListeners(new Main())
                 .build();
         JDA api = JDABuilder.createDefault(System.getenv("botToken")).addEventListeners(new TextMessages())
-                .build().awaitReady();;
+                .build().awaitReady();
+        ;
     }
 
     private final AudioPlayerManager playerManager;
@@ -39,7 +39,6 @@ public class Main extends ListenerAdapter {
         this.musicManagers = new HashMap<>();
 
         this.playerManager = new DefaultAudioPlayerManager();
-        AudioSourceManagers.registerRemoteSources(playerManager);
         AudioSourceManagers.registerLocalSource(playerManager);
     }
 
@@ -61,10 +60,14 @@ public class Main extends ListenerAdapter {
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         String[] command = event.getMessage().getContentRaw().split(" ", 2);
 
+        String hello = "sounds/Hello.m4a"; // TODO - reading sources automatically
+
         if ("~play".equals(command[0]) && command.length == 2) {
             loadAndPlay(event.getChannel(), command[1]);
-        } else if ("~skip".equals(command[0])) {
-            skipTrack(event.getChannel());
+
+        } else if ("hi".equals(command[0])) {
+            loadAndPlay(event.getChannel(), hello); //todo - create automatic commands based on file name
+
         }
 
         super.onGuildMessageReceived(event);
@@ -77,7 +80,7 @@ public class Main extends ListenerAdapter {
 
             @Override
             public void trackLoaded(AudioTrack track) {
-                channel.sendMessage("Adding to queue " + track.getInfo().title).queue();
+
 
                 play(channel.getGuild(), musicManager, track);
             }
@@ -90,14 +93,11 @@ public class Main extends ListenerAdapter {
                     firstTrack = playlist.getTracks().get(0);
                 }
 
-                channel.sendMessage("Adding to queue " + firstTrack.getInfo().title + " (first track of playlist " + playlist.getName() + ")").queue();
-
                 play(channel.getGuild(), musicManager, firstTrack);
             }
 
             @Override
             public void noMatches() {
-                channel.sendMessage("Nothing found by " + trackUrl).queue();
             }
 
             @Override
@@ -111,13 +111,6 @@ public class Main extends ListenerAdapter {
         connectToFirstVoiceChannel(guild.getAudioManager());
 
         musicManager.scheduler.queue(track);
-    }
-
-    private void skipTrack(TextChannel channel) {
-        GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
-        musicManager.scheduler.nextTrack();
-
-        channel.sendMessage("Skipped to next track.").queue();
     }
 
     private static void connectToFirstVoiceChannel(AudioManager audioManager) {
