@@ -10,6 +10,7 @@ import java.io.File;
 
 
 public class TextMessages extends ListenerAdapter {
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) return;
@@ -24,8 +25,9 @@ public class TextMessages extends ListenerAdapter {
 
         if (content.equals("hi")) {
             channel.sendFile(file).queue();
+
         } else if (content.equals("!Null")) {
-            channel.sendMessage("Pointer exception").queue();
+            channel.sendMessage("Pointer exception :feelspad: ").queue();
         }
     }
 }

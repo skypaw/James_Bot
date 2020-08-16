@@ -10,15 +10,19 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.TextChannel;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 
 public class Main extends ListenerAdapter {
@@ -29,17 +33,20 @@ public class Main extends ListenerAdapter {
                 .build();
         JDA api = JDABuilder.createDefault(System.getenv("botToken")).addEventListeners(new TextMessages())
                 .build().awaitReady();
-        ;
+
     }
 
     private final AudioPlayerManager playerManager;
     private final Map<Long, GuildMusicManager> musicManagers;
 
-    private Main() {
+    private Main() throws IOException {
         this.musicManagers = new HashMap<>();
 
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerLocalSource(playerManager);
+
+
+        listFiles();
     }
 
     private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
@@ -57,10 +64,24 @@ public class Main extends ListenerAdapter {
     }
 
     @Override
+    public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
+        if (!event.getChannelJoined().getName().equals("Pokój")) return;
+        if (event.getMember().getUser().getName().equals("Hydra")) return;
+
+        String hello = createDirectoryString("Hello", "m4a");
+        loadAndPlay(event.getChannelJoined(), hello);
+
+    }
+
+
+    @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         String[] command = event.getMessage().getContentRaw().split(" ", 2);
 
-        String hello = "sounds/Hello.m4a"; // TODO - reading sources automatically
+        String hello = createDirectoryString("Hello", "m4a"); // TODO - reading sources automatically
+
+        String hammond = "sounds/hammond.mp3"; // TODO - reading sources automatically
+
 
         if ("~play".equals(command[0]) && command.length == 2) {
             loadAndPlay(event.getChannel(), command[1]);
@@ -68,20 +89,54 @@ public class Main extends ListenerAdapter {
         } else if ("hi".equals(command[0])) {
             loadAndPlay(event.getChannel(), hello); //todo - create automatic commands based on file name
 
+        } else if ("hammond".equals(command[0])) {
+            loadAndPlay(event.getChannel(), hammond);
+
         }
 
         super.onGuildMessageReceived(event);
     }
 
-    private void loadAndPlay(final TextChannel channel, final String trackUrl) {
+
+    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
+        connectToFirstVoiceChannel(guild.getAudioManager());
+
+        musicManager.scheduler.queue(track);
+    }
+
+    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
+        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
+            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannelsByName("Pokój", true)) {
+                audioManager.openAudioConnection(voiceChannel);
+                break;
+            }
+        }
+    }
+
+    private String createDirectoryString(String titleString, String format) {
+        StringBuilder builder = new StringBuilder().append("sounds/").append(titleString).append(".").append(format);
+        return builder.toString();
+    }
+
+    private void listFiles() throws IOException {
+
+        try (Stream<Path> paths = Files.walk(Paths.get("sounds/"))) {
+            paths
+                    .filter(Files::isRegularFile)
+                    .forEach(System.out::println);
+
+        }
+
+    }
+
+
+    private void loadAndPlay(final GuildChannel channel, final String trackUrl) {
         GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
 
         playerManager.loadItemOrdered(musicManager, trackUrl, new AudioLoadResultHandler() {
 
             @Override
             public void trackLoaded(AudioTrack track) {
-
-
                 play(channel.getGuild(), musicManager, track);
             }
 
@@ -102,23 +157,7 @@ public class Main extends ListenerAdapter {
 
             @Override
             public void loadFailed(FriendlyException exception) {
-                channel.sendMessage("Could not play: " + exception.getMessage()).queue();
             }
         });
-    }
-
-    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
-        connectToFirstVoiceChannel(guild.getAudioManager());
-
-        musicManager.scheduler.queue(track);
-    }
-
-    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
-        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
-            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannels()) {
-                audioManager.openAudioConnection(voiceChannel);
-                break;
-            }
-        }
     }
 }
