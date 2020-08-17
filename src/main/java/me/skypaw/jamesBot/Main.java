@@ -11,7 +11,9 @@ import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.DisconnectEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
@@ -66,10 +68,23 @@ public class Main extends ListenerAdapter {
     @Override
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
         if (!event.getChannelJoined().getName().equals("Pokój")) return;
-        if (event.getMember().getUser().getName().equals("Hydra")) return;
+        if (event.getMember().getUser().getName().equals("Hydra")||event.getMember().getUser().getName().equals("JamesBot")) return;
 
         String hello = createDirectoryString("Hello", "m4a");
+
         loadAndPlay(event.getChannelJoined(), hello);
+
+    }
+
+    @Override
+    public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+        event.getChannelLeft().getUserLimit();
+
+        int i = 0;
+        if (i == 0 ){
+            event.getGuild().getAudioManager().closeAudioConnection();
+        }
+
 
     }
 
@@ -79,6 +94,7 @@ public class Main extends ListenerAdapter {
         String[] command = event.getMessage().getContentRaw().split(" ", 2);
 
         String hello = createDirectoryString("Hello", "m4a"); // TODO - reading sources automatically
+        String bonk = createDirectoryString("bonk", "mp3"); // TODO - reading sources automatically
 
         String hammond = "sounds/hammond.mp3"; // TODO - reading sources automatically
 
@@ -91,6 +107,9 @@ public class Main extends ListenerAdapter {
 
         } else if ("hammond".equals(command[0])) {
             loadAndPlay(event.getChannel(), hammond);
+
+        }else if ("bonk".equals(command[0])) {
+            loadAndPlay(event.getChannel(), bonk);
 
         }
 
