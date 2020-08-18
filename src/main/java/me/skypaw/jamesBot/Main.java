@@ -23,7 +23,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -72,7 +72,7 @@ public class Main extends ListenerAdapter {
         if (event.getMember().getUser().getName().equals("Hydra") || event.getMember().getUser().getName().equals("JamesBot"))
             return;
 
-        String hello = createDirectoryString("Hello", "m4a");
+        String hello = createDirectoryString("hi", "m4a");
 
         try {
             Thread.sleep(600);
@@ -99,31 +99,31 @@ public class Main extends ListenerAdapter {
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         if (!event.getChannel().getName().equals("the-grand-tour")) return;
+        if (event.getAuthor().getName().equals("JamesBot")) return;
+
+        ArrayList<String> list = null;
+
+        try {
+            list = listFiles();
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         String[] command = event.getMessage().getContentRaw().split(" ", 2);
 
-        String hello = createDirectoryString("Hello", "m4a"); // TODO - reading sources automatically
-        String bonk = createDirectoryString("bonk", "mp3"); // TODO - reading sources automatically
-        String bigfat = createDirectoryString("bigfat", "mp3"); // TODO - reading sources automatically
+        assert list != null;
 
-        String hammond = "sounds/hammond.mp3"; // TODO - reading sources automatically
+        String separator = "\\\\";
+        String separator1 = "\\.";
+        for (String s : list) {
+            String[] parts = s.toLowerCase().split(separator);
+            String[] parts2 = parts[1].split(separator1);
 
-
-        if ("~play".equals(command[0]) && command.length == 2) {
-            loadAndPlay(event.getChannel(), command[1]);
-
-        } else if ("hi".equals(command[0])) {
-            loadAndPlay(event.getChannel(), hello); //todo - create automatic commands based on file name
-
-        } else if ("hammond".equals(command[0])) {
-            loadAndPlay(event.getChannel(), hammond);
-
-        } else if ("bonk".equals(command[0])) {
-            loadAndPlay(event.getChannel(), bonk);
-
-        } else if ("bigfat".equals(command[0])) {
-            loadAndPlay(event.getChannel(), bigfat);
-
+            if (parts2[0].equals(command[0].toLowerCase())) {
+                loadAndPlay(event.getChannel(), createDirectoryString(parts2[0],parts2[1]));
+            }
         }
 
         super.onGuildMessageReceived(event);
@@ -187,12 +187,11 @@ public class Main extends ListenerAdapter {
         try (Stream<Path> paths = Files.walk(Paths.get("sounds/"))) {
             paths
                     .filter(Files::isRegularFile)
-                    .forEach((temp)->{
-                            list.add(temp.toString());
+                    .forEach((temp) -> {
+                        list.add(temp.toString());
                     });
         }
 
-        System.out.println(list);
         return list;
     }
 
