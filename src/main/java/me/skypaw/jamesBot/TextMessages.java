@@ -19,6 +19,7 @@ public class TextMessages extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() && !event.getAuthor().getName().equals("JamesBot")) return;
+        if (!event.getChannel().getName().equals("the-grand-tour")) return;
 
         Guild guild = event.getGuild();
 
@@ -56,7 +57,13 @@ public class TextMessages extends ListenerAdapter {
             channel.deleteMessageById(id).queueAfter(3, TimeUnit.SECONDS);
 
 
-        }else {
+        } else {  //it is looping, bot using itself
+            if (event.getAuthor().getName().equals("JamesBot")) {
+                channel.deleteMessageById(channel.getLatestMessageId()).queueAfter(3, TimeUnit.SECONDS);
+                return;
+            }
+
+            channel.sendMessage("Nie ma takiej komedny użyj \"help\"").queue();
             channel.deleteMessageById(channel.getLatestMessageId()).queueAfter(3, TimeUnit.SECONDS);
         }
 
