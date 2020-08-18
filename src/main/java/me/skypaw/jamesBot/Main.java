@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -96,6 +98,8 @@ public class Main extends ListenerAdapter {
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
+        if (!event.getChannel().getName().equals("the-grand-tour")) return;
+
         String[] command = event.getMessage().getContentRaw().split(" ", 2);
 
         String hello = createDirectoryString("Hello", "m4a"); // TODO - reading sources automatically
@@ -124,39 +128,6 @@ public class Main extends ListenerAdapter {
 
         super.onGuildMessageReceived(event);
     }
-
-
-    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
-        connectToFirstVoiceChannel(guild.getAudioManager());
-
-        musicManager.scheduler.queue(track);
-    }
-
-    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
-        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
-            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannelsByName("Pokój", true)) {
-                audioManager.openAudioConnection(voiceChannel);
-                break;
-            }
-        }
-    }
-
-    private String createDirectoryString(String titleString, String format) {
-        StringBuilder builder = new StringBuilder().append("sounds/").append(titleString).append(".").append(format);
-        return builder.toString();
-    }
-
-    private void listFiles() throws IOException {
-
-        try (Stream<Path> paths = Files.walk(Paths.get("sounds/"))) {
-            paths
-                    .filter(Files::isRegularFile)
-                    .forEach(System.out::println);
-
-        }
-
-    }
-
 
     private void loadAndPlay(final GuildChannel channel, final String trackUrl) {
         GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
@@ -188,4 +159,42 @@ public class Main extends ListenerAdapter {
             }
         });
     }
+
+    private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
+        connectToFirstVoiceChannel(guild.getAudioManager());
+
+        musicManager.scheduler.queue(track);
+    }
+
+    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
+        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
+            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannelsByName("Pokój", true)) {
+                audioManager.openAudioConnection(voiceChannel);
+                break;
+            }
+        }
+    }
+
+    private String createDirectoryString(String titleString, String format) {
+        StringBuilder builder = new StringBuilder().append("sounds/").append(titleString).append(".").append(format);
+        return builder.toString();
+    }
+
+    private ArrayList<String> listFiles() throws IOException {
+
+        ArrayList<String> list = new ArrayList<>();
+
+        try (Stream<Path> paths = Files.walk(Paths.get("sounds/"))) {
+            paths
+                    .filter(Files::isRegularFile)
+                    .forEach((temp)->{
+                            list.add(temp.toString());
+                    });
+        }
+
+        System.out.println(list);
+        return list;
+    }
+
+
 }
