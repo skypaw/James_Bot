@@ -21,10 +21,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
-import java.util.Map;
 import java.util.stream.Stream;
 
 
@@ -33,24 +31,30 @@ public class Main extends ListenerAdapter {
         new JDABuilder(AccountType.BOT)
                 .setToken(System.getenv("botToken"))
                 .addEventListeners(new Main())
-                .build();
-        JDA api = JDABuilder.createDefault(System.getenv("botToken")).addEventListeners(new TextMessages())
-                .build().awaitReady();
+                .build()
+                .awaitReady();
+
+        JDA jda = JDABuilder
+                .createDefault(System.getenv("botToken"))
+                .addEventListeners(new TextMessages())
+                .build()
+                .awaitReady();
 
     }
+
 
     private final AudioPlayerManager playerManager;
     private final Map<Long, GuildMusicManager> musicManagers;
 
-    private Main() throws IOException {
+
+    Main() {
         this.musicManagers = new HashMap<>();
 
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerLocalSource(playerManager);
 
-
-        listFiles();
     }
+
 
     private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
         long guildId = Long.parseLong(guild.getId());
@@ -72,7 +76,7 @@ public class Main extends ListenerAdapter {
         if (event.getMember().getUser().getName().equals("Hydra") || event.getMember().getUser().getName().equals("JamesBot"))
             return;
 
-        String hello = createDirectoryString("hi", "m4a");
+        String hello = createDirectoryString("hi", "m4a", "sounds");
 
         try {
             Thread.sleep(600);
@@ -81,6 +85,7 @@ public class Main extends ListenerAdapter {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
 
     }
 
@@ -100,11 +105,33 @@ public class Main extends ListenerAdapter {
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
         if (!event.getChannel().getName().equals("the-grand-tour")) return;
         if (event.getAuthor().getName().equals("JamesBot")) return;
+        if (event.getMessage().getContentDisplay().equals("random")) {
+
+            Runnable runnable = () -> {
+                while (true) {
+                    try {
+                        int timeThread = randomPlayer(event.getChannel());
+
+                        Thread.sleep(timeThread);
+
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            Thread t = new Thread(runnable);
+            t.start();
+
+
+        }
+
 
         ArrayList<String> list = null;
 
         try {
-            list = listFiles();
+            list = listFiles("sounds");
 
 
         } catch (IOException e) {
@@ -122,7 +149,7 @@ public class Main extends ListenerAdapter {
             String[] parts2 = parts[1].split(separator1);
 
             if (parts2[0].equals(command[0].toLowerCase())) {
-                loadAndPlay(event.getChannel(), createDirectoryString(parts2[0],parts2[1]));
+                loadAndPlay(event.getChannel(), createDirectoryString(parts2[0], parts2[1], "sounds"));
             }
         }
 
@@ -175,16 +202,16 @@ public class Main extends ListenerAdapter {
         }
     }
 
-    private String createDirectoryString(String titleString, String format) {
-        StringBuilder builder = new StringBuilder().append("sounds/").append(titleString).append(".").append(format);
+    private String createDirectoryString(String titleString, String format, String directory) {
+        StringBuilder builder = new StringBuilder().append(directory).append("/").append(titleString).append(".").append(format);
         return builder.toString();
     }
 
-    private ArrayList<String> listFiles() throws IOException {
+    private ArrayList<String> listFiles(String directory) throws IOException {
 
         ArrayList<String> list = new ArrayList<>();
 
-        try (Stream<Path> paths = Files.walk(Paths.get("sounds/"))) {
+        try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
             paths
                     .filter(Files::isRegularFile)
                     .forEach((temp) -> {
@@ -193,6 +220,47 @@ public class Main extends ListenerAdapter {
         }
 
         return list;
+    }
+
+    public int randomPlayer(GuildChannel voiceChannel) {
+        Random test = new Random();
+
+        ArrayList<String> list = null;
+
+        try {
+            list = listFiles("random");
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        assert list != null;
+
+        int randomSound = test.nextInt(list.size());
+
+        String randomSoundString = String.valueOf(randomSound);
+
+        String separator = "\\\\";
+        String separator1 = "\\.";
+        for (String s : list) {
+            String[] parts = s.split(separator);
+            String[] parts2 = parts[1].split(separator1);
+
+            if (parts2[0].equals(randomSoundString)) {
+
+                loadAndPlay(voiceChannel, createDirectoryString(parts2[0], parts2[1], "random"));
+            }
+        }
+
+
+        int min = 1000 * 60 * 10;
+        int randomTime = test.nextInt(25)*1000 * 60   + min;
+
+        System.out.println(randomTime/60/1000);
+
+        return randomTime;
+
     }
 
 
