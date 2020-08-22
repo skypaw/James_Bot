@@ -34,9 +34,7 @@ public class VoiceMessages extends ListenerAdapter {
     private final ArrayList<String> randomSounds;
 
     private final List<String> randomSoundsName;
-    private final List<String> randomSoundsExtension;
     private final List<String> soundsToCommandName;
-    private final List<String> soundsToCommandExtension;
 
 
     private String randomDirectory = "random";
@@ -49,11 +47,8 @@ public class VoiceMessages extends ListenerAdapter {
         this.randomSounds = listFiles(randomDirectory);
 
         //Dividing directory strings
-        this.randomSoundsName = stringDirectorySeparator(randomSounds).get(0);
-        this.randomSoundsExtension = stringDirectorySeparator(randomSounds).get(1);
-
-        this.soundsToCommandName=stringDirectorySeparator(soundsToCommand).get(0);
-        this.soundsToCommandExtension=stringDirectorySeparator(soundsToCommand).get(1);
+        this.randomSoundsName = stringDirectorySeparator(randomSounds);
+        this.soundsToCommandName = stringDirectorySeparator(soundsToCommand);
 
 
         this.musicManagers = new HashMap<>();
@@ -62,25 +57,19 @@ public class VoiceMessages extends ListenerAdapter {
 
     }
 
-    private List<List<String>> stringDirectorySeparator(ArrayList<String> list) {
+    private List<String> stringDirectorySeparator(ArrayList<String> list) {
         String separator = "\\\\";
         String separator1 = "\\.";
         List<String> name = new ArrayList<>();
-        List<String> extension = new ArrayList<>();
 
         for (String s : list) {
             String[] parts = s.toLowerCase().split(separator);
             String[] parts2 = parts[1].split(separator1);
 
             name.add(parts2[0]);
-            extension.add(parts2[1]);
         }
 
-        List<List<String>> returnList = new ArrayList<>();
-        returnList.add(name);
-        returnList.add(extension);
-
-        return returnList;
+        return name;
     }
 
     private ArrayList<String> listFiles(String directory) throws IOException {
@@ -95,12 +84,6 @@ public class VoiceMessages extends ListenerAdapter {
 
         return list;
     }
-
-    private String createDirectoryString(String titleString, String format, String directory) {
-        StringBuilder builder = new StringBuilder().append(directory).append("/").append(titleString).append(".").append(format);
-        return builder.toString();
-    }
-
 
     private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
         long guildId = Long.parseLong(guild.getId());
@@ -122,7 +105,7 @@ public class VoiceMessages extends ListenerAdapter {
         if (event.getMember().getUser().getName().equals("Hydra") || event.getMember().getUser().getName().equals("JamesBot"))
             return;
 
-        String hello = createDirectoryString("hi", "m4a", soundsDirectory);
+        String hello = "sounds/hi.m4a";
 
         try {
             Thread.sleep(600);
@@ -154,12 +137,17 @@ public class VoiceMessages extends ListenerAdapter {
         if (event.getMessage().getContentDisplay().equals("random")) {
             randomThread(event);
         }
+        if(event.getMessage().getContentDisplay().equals("stoprandom")){
+            stopRandomThread();
+        }
 
-        String[] command = event.getMessage().getContentRaw().split(" ", 2);
+                String[] command = event.getMessage().getContentRaw().split(" ", 2);
+        int i = 0;
         for (String s : soundsToCommandName) {
             if (s.equals(command[0].toLowerCase())) {
-                loadAndPlay(event.getChannel(), createDirectoryString(s,"mp3", soundsDirectory)); //TODO to take format form the file! And do the random
+                loadAndPlay(event.getChannel(), soundsToCommand.get(i));
             }
+            i++;
         }
 
         super.onGuildMessageReceived(event);
@@ -221,21 +209,15 @@ public class VoiceMessages extends ListenerAdapter {
         Random test = new Random();
 
         int randomSound = test.nextInt(randomSounds.size());
-
         String randomSoundString = String.valueOf(randomSound);
 
-        String separator = "\\\\";
-        String separator1 = "\\.";
-        for (String s : randomSounds) {
-            String[] parts = s.split(separator);
-            String[] parts2 = parts[1].split(separator1);
-
-            if (parts2[0].equals(randomSoundString)) {
-
-                loadAndPlay(voiceChannel, createDirectoryString(parts2[0], parts2[1], randomDirectory));
+        int i = 0;
+        for (String s : randomSoundsName) {
+            if (s.equals(randomSoundString)) {
+                loadAndPlay(voiceChannel, randomSounds.get(i));
             }
+            i++;
         }
-
 
         int min = 60 * 1000 * 10;
         int randomTime = test.nextInt(25) * 1000 * 60 + min;
@@ -269,13 +251,16 @@ public class VoiceMessages extends ListenerAdapter {
             t.start();
         }
 
+    }
+
+    private void stopRandomThread() {
+
         //Stopping the thread, and changing t to null so it can be launch again
-        if (event.getMessage().getContentDisplay().equals("stoprandom") && t != null) {
+        if (t != null) {
             t.stop();
             t = null;
         }
     }
-
 }
 
 
