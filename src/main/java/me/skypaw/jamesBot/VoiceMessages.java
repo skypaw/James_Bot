@@ -20,32 +20,67 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class VoiceMessages extends ListenerAdapter {
 
     private final AudioPlayerManager playerManager;
     private final Map<Long, GuildMusicManager> musicManagers;
+
     private Thread t = null;
 
     private final ArrayList<String> soundsToCommand;
     private final ArrayList<String> randomSounds;
 
+    private final List<String> randomSoundsName;
+    private final List<String> randomSoundsExtension;
+    private final List<String> soundsToCommandName;
+    private final List<String> soundsToCommandExtension;
+
+
     private String randomDirectory = "random";
     private String soundsDirectory = "sounds";
 
+
     VoiceMessages() throws IOException {
-        this.soundsToCommand = listFiles(randomDirectory);
-        this.randomSounds = listFiles(soundsDirectory);
+        //Listing files on the start
+        this.soundsToCommand = listFiles(soundsDirectory);
+        this.randomSounds = listFiles(randomDirectory);
+
+        //Dividing directory strings
+        this.randomSoundsName = stringDirectorySeparator(randomSounds).get(0);
+        this.randomSoundsExtension = stringDirectorySeparator(randomSounds).get(1);
+
+        this.soundsToCommandName=stringDirectorySeparator(soundsToCommand).get(0);
+        this.soundsToCommandExtension=stringDirectorySeparator(soundsToCommand).get(1);
+
 
         this.musicManagers = new HashMap<>();
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerLocalSource(playerManager);
 
+    }
+
+    private List<List<String>> stringDirectorySeparator(ArrayList<String> list) {
+        String separator = "\\\\";
+        String separator1 = "\\.";
+        List<String> name = new ArrayList<>();
+        List<String> extension = new ArrayList<>();
+
+        for (String s : list) {
+            String[] parts = s.toLowerCase().split(separator);
+            String[] parts2 = parts[1].split(separator1);
+
+            name.add(parts2[0]);
+            extension.add(parts2[1]);
+        }
+
+        List<List<String>> returnList = new ArrayList<>();
+        returnList.add(name);
+        returnList.add(extension);
+
+        return returnList;
     }
 
     private ArrayList<String> listFiles(String directory) throws IOException {
@@ -121,15 +156,9 @@ public class VoiceMessages extends ListenerAdapter {
         }
 
         String[] command = event.getMessage().getContentRaw().split(" ", 2);
-
-        String separator = "\\\\";
-        String separator1 = "\\.";
-        for (String s : soundsToCommand) {
-            String[] parts = s.toLowerCase().split(separator);
-            String[] parts2 = parts[1].split(separator1);
-
-            if (parts2[0].equals(command[0].toLowerCase())) {
-                loadAndPlay(event.getChannel(), createDirectoryString(parts2[0], parts2[1], soundsDirectory));
+        for (String s : soundsToCommandName) {
+            if (s.equals(command[0].toLowerCase())) {
+                loadAndPlay(event.getChannel(), createDirectoryString(s,"mp3", soundsDirectory)); //TODO to take format form the file! And do the random
             }
         }
 
