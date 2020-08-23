@@ -34,7 +34,7 @@ public class VoiceMessages extends ListenerAdapter {
     private final ArrayList<String> randomSounds;
 
     private final List<String> randomSoundsName;
-    private final List<String> soundsToCommandName;
+    final List<String> soundsToCommandName;
 
 
     private String randomDirectory = "random";
