@@ -16,6 +16,8 @@ import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.managers.AudioManager;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,7 +25,13 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 public class VoiceMessages extends ListenerAdapter {
+
+    private static Logger logger = LoggerFactory.getLogger(VoiceMessages.class.getName());
 
     private final AudioPlayerManager playerManager;
     private final Map<Long, GuildMusicManager> musicManagers;
@@ -39,9 +47,14 @@ public class VoiceMessages extends ListenerAdapter {
 
     private String randomDirectory = "random";
     private String soundsDirectory = "sounds";
+    private String voiceChannelConfig;
+
+    String textChannelConfig;
 
 
     VoiceMessages() throws IOException {
+        logger.info("Starting VoiceMessages");
+
         //Listing files on the start
         this.soundsToCommand = listFiles(soundsDirectory);
         this.randomSounds = listFiles(randomDirectory);
@@ -55,7 +68,45 @@ public class VoiceMessages extends ListenerAdapter {
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerLocalSource(playerManager);
 
+
+        try {
+            File configFile = new File("src\\main\\resources\\config.properties");
+            FileInputStream fileInputStream = new FileInputStream(configFile);
+            Properties properties = new Properties();
+
+            properties.load(fileInputStream);
+
+            this.voiceChannelConfig = properties.getProperty("VoiceRoom");
+            this.textChannelConfig = properties.getProperty("TextRoom");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
+
+    /**
+     * LIST THE FILES
+     * Method responsible for creating the list of sounds in 'random' and 'sounds' directory.
+     */
+
+    private ArrayList<String> listFiles(String directory) throws IOException {
+        ArrayList<String> list = new ArrayList<>();
+
+        try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
+            paths
+                    .filter(Files::isRegularFile)
+                    .forEach((temp) -> list.add(temp.toString()));
+        }
+
+        return list;
+    }
+
+    /**
+     * DIVIDING DIRECTORY STRINGS
+     * Method responsible for finding the name of the file, and creating the list of filenames to use it as commands for
+     * playing the sounds.
+     */
 
     private List<String> stringDirectorySeparator(ArrayList<String> list) {
         String separator = "\\\\";
@@ -72,36 +123,15 @@ public class VoiceMessages extends ListenerAdapter {
         return name;
     }
 
-    private ArrayList<String> listFiles(String directory) throws IOException {
 
-        ArrayList<String> list = new ArrayList<>();
-
-        try (Stream<Path> paths = Files.walk(Paths.get(directory))) {
-            paths
-                    .filter(Files::isRegularFile)
-                    .forEach((temp) -> list.add(temp.toString()));
-        }
-
-        return list;
-    }
-
-    private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
-        long guildId = Long.parseLong(guild.getId());
-        GuildMusicManager musicManager = musicManagers.get(guildId);
-
-        if (musicManager == null) {
-            musicManager = new GuildMusicManager(playerManager);
-            musicManagers.put(guildId, musicManager);
-        }
-
-        guild.getAudioManager().setSendingHandler(musicManager.getSendHandler());
-
-        return musicManager;
-    }
+    /**
+     * JOIN
+     * Event on joining the channel by user. When is connected the bot plays welcome message.
+     */
 
     @Override
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
-        if (!event.getChannelJoined().getName().equals("Pokój")) return;
+        if (!event.getChannelJoined().getName().equals(voiceChannelConfig)) return;
         if (event.getMember().getUser().getName().equals("Hydra") || event.getMember().getUser().getName().equals("JamesBot"))
             return;
 
@@ -117,31 +147,42 @@ public class VoiceMessages extends ListenerAdapter {
 
     }
 
+    /**
+     * LEAVE
+     * Event on leaving the channel by user. When the only user connected is bot on the Discord Guild he leave the
+     * channel and stop playing random sounds (if turned on)
+     */
+
     @Override
     public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
-
-        if (event.getChannelLeft().getName().equals("Pokój") && event.getChannelLeft().getMembers().size() == 1) {
+        if (event.getChannelLeft().getName().equals(voiceChannelConfig) && event.getChannelLeft().getMembers().size() == 1) {
             event.getGuild().getAudioManager().closeAudioConnection();
-        } else if (!event.getChannelLeft().getName().equals("Pokój") && event.getGuild().getVoiceChannelsByName("Pokój", true).get(0).getMembers().size() == 1) {
+            stopRandomThread();
+        } else if (!event.getChannelLeft().getName().equals(voiceChannelConfig) && event.getGuild().getVoiceChannelsByName(voiceChannelConfig, true).get(0).getMembers().size() == 1) {
             event.getGuild().getAudioManager().closeAudioConnection();
+            stopRandomThread();
         }
 
     }
 
+    /**
+     * TEXT COMMAND
+     * Event on getting text command to the bot text-channel. It is responsible for playing sounds by command,
+     * and random sounds.
+     */
 
     @Override
     public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
-
-        if (!event.getChannel().getName().equals("the-grand-tour")) return;
-        if (event.getAuthor().getName().equals("JamesBot")) return;
+        if (!event.getChannel().getName().equals(textChannelConfig)) return;
+        if (event.getAuthor().getName().equals(voiceChannelConfig)) return;
         if (event.getMessage().getContentDisplay().equals("random")) {
             randomThread(event);
         }
-        if(event.getMessage().getContentDisplay().equals("stoprandom")){
+        if (event.getMessage().getContentDisplay().equals("stoprandom")) {
             stopRandomThread();
         }
 
-                String[] command = event.getMessage().getContentRaw().split(" ", 2);
+        String[] command = event.getMessage().getContentRaw().split(" ", 2);
         int i = 0;
         for (String s : soundsToCommandName) {
             if (s.equals(command[0].toLowerCase())) {
@@ -153,6 +194,23 @@ public class VoiceMessages extends ListenerAdapter {
         super.onGuildMessageReceived(event);
     }
 
+
+    // Method from LavaPlayer
+    private synchronized GuildMusicManager getGuildAudioPlayer(Guild guild) {
+        long guildId = Long.parseLong(guild.getId());
+        GuildMusicManager musicManager = musicManagers.get(guildId);
+
+        if (musicManager == null) {
+            musicManager = new GuildMusicManager(playerManager);
+            musicManagers.put(guildId, musicManager);
+        }
+
+        guild.getAudioManager().setSendingHandler(musicManager.getSendHandler());
+
+        return musicManager;
+    }
+
+    // Method from LavaPlayer
     private void loadAndPlay(final GuildChannel channel, final String trackUrl) {
         GuildMusicManager musicManager = getGuildAudioPlayer(channel.getGuild());
 
@@ -184,15 +242,18 @@ public class VoiceMessages extends ListenerAdapter {
         });
     }
 
+    // Method from LavaPlayer
     private void play(Guild guild, GuildMusicManager musicManager, AudioTrack track) {
         connectToFirstVoiceChannel(guild.getAudioManager());
 
         musicManager.scheduler.queue(track);
     }
 
-    private static void connectToFirstVoiceChannel(AudioManager audioManager) {
-        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
-            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannelsByName("Pokój", true)) {
+
+    // Method responsible for connecting bot to the channel
+    private void connectToFirstVoiceChannel(AudioManager audioManager) {
+        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect() && !audioManager.getGuild().getVoiceChannelsByName("Pokój", true).isEmpty()) {
+            for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannelsByName(voiceChannelConfig, true)) {
                 audioManager.openAudioConnection(voiceChannel);
                 break;
             }
@@ -200,7 +261,8 @@ public class VoiceMessages extends ListenerAdapter {
     }
 
 
-    /* RANDOM
+    /**
+     * RANDOM
      * Methods responsible for playing random sounds from dictionary "random"
      * Sounds will be waiting to queue in new thread, so the main functionality will be available.
      */
