@@ -14,7 +14,18 @@ public class Main extends ListenerAdapter {
     public static void main(String[] args) throws Exception {
 
         BasicConfigurator.configure();
+        configCreateAndLoad();
 
+        new JDABuilder(AccountType.BOT)
+                .setToken(System.getenv("botToken"))
+                .addEventListeners(new VoiceMessages())
+                .addEventListeners(new TextMessages())
+                .build()
+                .awaitReady();
+
+    }
+
+    private static void configCreateAndLoad(){
         FileOutputStream fileOut = null;
         File configFile = null;
 
@@ -32,14 +43,6 @@ public class Main extends ListenerAdapter {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        new JDABuilder(AccountType.BOT)
-                .setToken(System.getenv("botToken"))
-                .addEventListeners(new VoiceMessages())
-                .addEventListeners(new TextMessages())
-                .build()
-                .awaitReady();
-
     }
 
 }

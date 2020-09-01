@@ -6,8 +6,10 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 
@@ -21,10 +23,12 @@ public class TextMessages extends ListenerAdapter {
          * and than TextMessages class is taking the list of the files created in VoiceMessages
          */
 
-        VoiceMessages test = new VoiceMessages();
-        this.commandFromSounds = test.soundsToCommandName;
-        this.textChannelConfig = test.textChannelConfig;
+        VoiceMessages voiceMessages = new VoiceMessages();
+        this.commandFromSounds = voiceMessages.soundsToCommandName;
+        this.textChannelConfig = voiceMessages.textChannelConfig;
+
     }
+
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -50,11 +54,12 @@ public class TextMessages extends ListenerAdapter {
                 }
 
                 channel.deleteMessageById(channel.getLatestMessageId()).queueAfter(3, TimeUnit.SECONDS);
-                
+
                 break;
 
-            case "plik": {
-                System.out.println("test");
+            case "random":
+            case "stoprandom": {
+                break;
             }
             case "!Null": {
                 channel.sendMessage("Pointer exception :feelsbad: ").queue();
