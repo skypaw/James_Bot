@@ -59,15 +59,8 @@ public class TextMessages extends ListenerAdapter {
 
             case "random":
             case "stoprandom": {
-                break;
-            }
-            case "!Null": {
-                channel.sendMessage("Pointer exception :feelsbad: ").queue();
-
                 String id = channel.getLatestMessageId();
                 channel.deleteMessageById(id).queue();
-
-
                 break;
             }
             case "help": {

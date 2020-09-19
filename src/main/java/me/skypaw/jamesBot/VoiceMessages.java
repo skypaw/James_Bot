@@ -268,9 +268,9 @@ public class VoiceMessages extends ListenerAdapter {
      */
 
     public int randomPlayer(GuildChannel voiceChannel) {
-        Random test = new Random();
+        Random random = new Random();
 
-        int randomSound = test.nextInt(randomSounds.size());
+        int randomSound = random.nextInt(randomSounds.size());
         String randomSoundString = String.valueOf(randomSound);
 
         int i = 0;
@@ -281,10 +281,8 @@ public class VoiceMessages extends ListenerAdapter {
             i++;
         }
 
-        int min = 60 * 1000 * 10;
-        int randomTime = test.nextInt(25) * 1000 * 60 + min;
-
-        System.out.println(randomTime / 60 / 1000);
+        int min = 60 * 1000 * 12;
+        int randomTime = random.nextInt(23) * 1000 * 60 + min;
 
         return randomTime;
 
@@ -324,5 +322,4 @@ public class VoiceMessages extends ListenerAdapter {
         }
     }
 }
-
 
