@@ -6,10 +6,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 
@@ -64,11 +62,11 @@ public class TextMessages extends ListenerAdapter {
                 break;
             }
             case "help": {
-                channel.sendMessage("I need somebody, HELP, not just anybody ").queue();
+                String helpContent = helpReturn(commandFromSounds);
+                channel.sendMessage(helpContent).queue();
 
                 String id = channel.getLatestMessageId();
-                channel.deleteMessageById(id).queueAfter(10, TimeUnit.SECONDS);
-
+                channel.deleteMessageById(id).queueAfter(15, TimeUnit.SECONDS);
 
                 break;
             }
@@ -84,7 +82,7 @@ public class TextMessages extends ListenerAdapter {
             default:
                 //Auto deleting JamesBot commands
                 if (event.getAuthor().getName().equals("JamesBot")) {
-                    channel.deleteMessageById(channel.getLatestMessageId()).queueAfter(3, TimeUnit.SECONDS);
+                    channel.deleteMessageById(channel.getLatestMessageId()).queueAfter(15, TimeUnit.SECONDS);
                     return;
                 }
 
@@ -104,4 +102,11 @@ public class TextMessages extends ListenerAdapter {
 
     }
 
+    private String helpReturn(List<String> command){
+        StringBuilder helpText = new StringBuilder();
+        for (String s: command){
+            helpText.append(s).append("\n");
+        }
+        return helpText.toString();
+    }
 }
