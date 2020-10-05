@@ -63,7 +63,8 @@ public class TextMessages extends ListenerAdapter {
             }
             case "help": {
                 String helpContent = helpReturn(commandFromSounds);
-                channel.sendMessage(helpContent).queue();
+                String helpFormated = "\u200E\n**Commands:**\n"+">>> " + helpContent;
+                channel.sendMessage(helpFormated).queue();
 
                 String id = channel.getLatestMessageId();
                 channel.deleteMessageById(id).queueAfter(15, TimeUnit.SECONDS);
@@ -102,9 +103,9 @@ public class TextMessages extends ListenerAdapter {
 
     }
 
-    private String helpReturn(List<String> command){
+    private String helpReturn(List<String> command) {
         StringBuilder helpText = new StringBuilder();
-        for (String s: command){
+        for (String s : command) {
             helpText.append(s).append("\n");
         }
         return helpText.toString();
