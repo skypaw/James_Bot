@@ -135,7 +135,7 @@ public class VoiceMessages extends ListenerAdapter {
         if (event.getMember().getUser().getName().equals("Hydra") || event.getMember().getUser().getName().equals("JamesBot"))
             return;
 
-        String hello = "sounds/hi.m4a";
+        String hello = "sounds/hi.m4a";  //TODO -> to config
 
         try {
             Thread.sleep(600);
