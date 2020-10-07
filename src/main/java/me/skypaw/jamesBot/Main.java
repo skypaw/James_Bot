@@ -6,8 +6,6 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.log4j.BasicConfigurator;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -28,9 +26,13 @@ public class Main extends ListenerAdapter {
 
     }
 
-    private static void configLoad() {
-        FileOutputStream fileOut;
+    private static void configLoad() throws IOException {
+
         File configFile = new File("src\\main\\resources\\config.properties");
+        InputStream inputStream = new FileInputStream("src\\main\\resources\\config.properties");
+
+        Properties properties = new Properties();
+        properties.load(inputStream);
 
         List<String> basicPropertiesContent = new ArrayList<>();
         basicPropertiesContent.add("VoiceRoom");
@@ -42,44 +44,33 @@ public class Main extends ListenerAdapter {
 
 
         if (!configFile.exists()) {
-            try {
-                fileOut = new FileOutputStream(configFile);
-                Properties properies = new Properties();
-
-                properies.setProperty(basicPropertiesContent.get(0), basicPropertiesValues.get(0));
-                properies.setProperty(basicPropertiesContent.get(1), basicPropertiesValues.get(1));
-
-                properies.store(fileOut, "Properties of Bot");
-                fileOut.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+            createConfig(configFile, basicPropertiesContent, basicPropertiesValues, properties);
         } else {
-            try {
-                List<String> contentPropertiesToCompare = Files.readAllLines(Paths.get("src\\main\\resources\\config.properties"));
-                System.out.println(contentPropertiesToCompare);
+            for (String s : basicPropertiesContent) {
 
-                int i = 0;
-
-                for (String s : contentPropertiesToCompare) {
-                    String[] splitContent = s.split("=");
-                    System.out.println(splitContent[0]);
-
-                    if (splitContent[0].charAt(0) != '#') {
-                        if (basicPropertiesContent.get(i).equals(splitContent[0])) {
-                            System.out.println(true);
-                        }
-                        i++;
-                    }
+                if (!properties.containsKey(s)) {
+                    createConfig(configFile, basicPropertiesContent, basicPropertiesValues, properties); //If there is lack of parameters (keys) in the config -> creating config one more time
                 }
-
-
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
 
+
+    private static void createConfig(File configFile, List<String> basicPropertiesContent, List<String> basicPropertiesValues, Properties properties) {
+        try {
+            FileOutputStream fileOut = new FileOutputStream(configFile);
+
+            int i = 0;
+            for (String s : basicPropertiesContent) {
+                properties.setProperty(s, basicPropertiesValues.get(i));
+                i++;
+            }
+            properties.store(fileOut, "Properties of Bot");
+            fileOut.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 }
