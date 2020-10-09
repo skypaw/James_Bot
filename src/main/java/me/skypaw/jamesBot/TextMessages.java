@@ -14,6 +14,8 @@ import java.util.concurrent.TimeUnit;
 public class TextMessages extends ListenerAdapter {
     private final List<String> commandFromSounds;
     private String textChannelConfig;
+    private String voiceChannelConfig;
+
 
     TextMessages() throws IOException {
 
@@ -24,14 +26,24 @@ public class TextMessages extends ListenerAdapter {
         VoiceMessages voiceMessages = new VoiceMessages();
         this.commandFromSounds = voiceMessages.soundsToCommandName;
         this.textChannelConfig = voiceMessages.textChannelConfig;
-
+        this.voiceChannelConfig = voiceMessages.voiceChannelConfig;
     }
-
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() && !event.getAuthor().getName().equals("JamesBot")) return;
+
+        if (event.getMessage().getContentDisplay().equals("setup") &&
+                (event.getGuild().getTextChannelsByName(textChannelConfig, true).isEmpty() ||
+                        event.getGuild().getVoiceChannelsByName(voiceChannelConfig, true).isEmpty())) { // TODO -> Move to Properties class or setup
+
+            event.getGuild().createTextChannel(textChannelConfig).queue();
+            event.getGuild().createVoiceChannel(voiceChannelConfig).queue();
+            return;
+        }
+
         if (!event.getChannel().getName().equals(textChannelConfig)) return;
+
 
         Guild guild = event.getGuild();
         String content = event.getMessage().getContentRaw();
@@ -63,11 +75,11 @@ public class TextMessages extends ListenerAdapter {
             }
             case "help": {
                 String helpContent = helpReturn(commandFromSounds);
-                String helpFormated = "\u200E\n**Commands:**\n"+">>> " + helpContent;
+                String helpFormated = "\u200E\n**Commands:**\n" + ">>> " + helpContent;
                 channel.sendMessage(helpFormated).queue();
 
                 String id = channel.getLatestMessageId();
-                channel.deleteMessageById(id).queueAfter(15, TimeUnit.SECONDS);
+                channel.deleteMessageById(id).queueAfter(3, TimeUnit.SECONDS);
 
                 break;
             }

@@ -12,10 +12,12 @@ import java.util.Properties;
 
 
 public class Main extends ListenerAdapter {
+
     public static void main(String[] args) throws Exception {
 
         BasicConfigurator.configure();
         configLoad();
+
 
         new JDABuilder(AccountType.BOT)
                 .setToken(System.getenv("botToken"))
@@ -37,17 +39,22 @@ public class Main extends ListenerAdapter {
         List<String> basicPropertiesContent = new ArrayList<>();
         basicPropertiesContent.add("VoiceRoom");
         basicPropertiesContent.add("TextRoom");
+        basicPropertiesContent.add("GreetingMessageDirectory");
+        basicPropertiesContent.add("RandomSoundDirectory");
+        basicPropertiesContent.add("VoiceCommandsDirectory");
 
         List<String> basicPropertiesValues = new ArrayList<>();
         basicPropertiesValues.add("Pokój");
         basicPropertiesValues.add("the-grand-tour");
+        basicPropertiesValues.add("sounds\\hi.m4a");
+        basicPropertiesValues.add("random");
+        basicPropertiesValues.add("sounds");
 
 
         if (!configFile.exists()) {
             createConfig(configFile, basicPropertiesContent, basicPropertiesValues, properties);
         } else {
             for (String s : basicPropertiesContent) {
-
                 if (!properties.containsKey(s)) {
                     createConfig(configFile, basicPropertiesContent, basicPropertiesValues, properties); //If there is lack of parameters (keys) in the config -> creating config one more time
                 }
