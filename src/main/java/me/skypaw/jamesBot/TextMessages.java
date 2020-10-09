@@ -1,6 +1,7 @@
 package me.skypaw.jamesBot;
 
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class TextMessages extends ListenerAdapter {
     private final List<String> commandFromSounds;
     private String textChannelConfig;
+
 
     TextMessages() throws IOException {
 
@@ -30,7 +32,7 @@ public class TextMessages extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot() && !event.getAuthor().getName().equals("JamesBot")) return;
+        if (event.getAuthor().isBot()) return;
         if (!event.getChannel().getName().equals(textChannelConfig)) return;
 
         Guild guild = event.getGuild();
@@ -67,7 +69,7 @@ public class TextMessages extends ListenerAdapter {
                 channel.sendMessage(helpFormated).queue();
 
                 String id = channel.getLatestMessageId();
-                channel.deleteMessageById(id).queueAfter(15, TimeUnit.SECONDS);
+                channel.deleteMessageById(id).queueAfter(3, TimeUnit.SECONDS);
 
                 break;
             }

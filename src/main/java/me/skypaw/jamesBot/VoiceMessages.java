@@ -45,44 +45,50 @@ public class VoiceMessages extends ListenerAdapter {
     final List<String> soundsToCommandName;
 
 
-    private String randomDirectory = "random";
-    private String soundsDirectory = "sounds";
+    private String randomDirectory;
+    private String soundsDirectory;
     private String voiceChannelConfig;
+    private String greetingSource;
 
     String textChannelConfig;
+    Properties properties;
 
 
     VoiceMessages() throws IOException {
         logger.info("Starting VoiceMessages");
 
-        //Listing files on the start
-        this.soundsToCommand = listFiles(soundsDirectory);
-        this.randomSounds = listFiles(randomDirectory);
-
-        //Dividing directory strings
-        this.randomSoundsName = stringDirectorySeparator(randomSounds);
-        this.soundsToCommandName = stringDirectorySeparator(soundsToCommand);
-
-
         this.musicManagers = new HashMap<>();
         this.playerManager = new DefaultAudioPlayerManager();
         AudioSourceManagers.registerLocalSource(playerManager);
 
-
+        properties = new Properties();
         try {
             File configFile = new File("src\\main\\resources\\config.properties");
             FileInputStream fileInputStream = new FileInputStream(configFile);
-            Properties properties = new Properties();
+
 
             properties.load(fileInputStream);
 
             this.voiceChannelConfig = properties.getProperty("VoiceRoom");
             this.textChannelConfig = properties.getProperty("TextRoom");
 
+            this.randomDirectory = properties.getProperty("RandomSoundDirectory");
+            this.soundsDirectory = properties.getProperty("VoiceCommandsDirectory");
+            this.greetingSource = properties.getProperty("GreetingMessageDirectory");
+
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        //Listing files on the start
+        this.soundsToCommand = listFiles(soundsDirectory);
+        this.randomSounds = listFiles(randomDirectory);
+
+
+        //Dividing directory strings
+        this.randomSoundsName = stringDirectorySeparator(randomSounds);
+        this.soundsToCommandName = stringDirectorySeparator(soundsToCommand);
     }
 
     /**
@@ -132,10 +138,10 @@ public class VoiceMessages extends ListenerAdapter {
     @Override
     public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
         if (!event.getChannelJoined().getName().equals(voiceChannelConfig)) return;
-        if (event.getMember().getUser().getName().equals("Hydra") || event.getMember().getUser().getName().equals("JamesBot"))
+        if (event.getMember().getUser().isBot())
             return;
 
-        String hello = "sounds/hi.m4a";  //TODO -> to config
+        String hello = greetingSource;
 
         try {
             Thread.sleep(600);
@@ -321,5 +327,6 @@ public class VoiceMessages extends ListenerAdapter {
             t = null;
         }
     }
+
 }
 
