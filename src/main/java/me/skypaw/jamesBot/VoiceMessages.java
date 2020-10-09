@@ -47,7 +47,7 @@ public class VoiceMessages extends ListenerAdapter {
 
     private String randomDirectory;
     private String soundsDirectory;
-    private String voiceChannelConfig;
+    String voiceChannelConfig;
     private String greetingSource;
 
     String textChannelConfig;
@@ -81,6 +81,7 @@ public class VoiceMessages extends ListenerAdapter {
             e.printStackTrace();
         }
 
+
         //Listing files on the start
         this.soundsToCommand = listFiles(soundsDirectory);
         this.randomSounds = listFiles(randomDirectory);
@@ -90,6 +91,7 @@ public class VoiceMessages extends ListenerAdapter {
         this.randomSoundsName = stringDirectorySeparator(randomSounds);
         this.soundsToCommandName = stringDirectorySeparator(soundsToCommand);
     }
+
 
     /**
      * LIST THE FILES

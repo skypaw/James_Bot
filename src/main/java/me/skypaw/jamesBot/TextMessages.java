@@ -1,7 +1,6 @@
 package me.skypaw.jamesBot;
 
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.GuildChannel;
 import net.dv8tion.jda.api.entities.MessageChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -15,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 public class TextMessages extends ListenerAdapter {
     private final List<String> commandFromSounds;
     private String textChannelConfig;
+    private String voiceChannelConfig;
 
 
     TextMessages() throws IOException {
@@ -26,14 +26,24 @@ public class TextMessages extends ListenerAdapter {
         VoiceMessages voiceMessages = new VoiceMessages();
         this.commandFromSounds = voiceMessages.soundsToCommandName;
         this.textChannelConfig = voiceMessages.textChannelConfig;
-
+        this.voiceChannelConfig = voiceMessages.voiceChannelConfig;
     }
-
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (event.getAuthor().isBot()) return;
+        if (event.getAuthor().isBot() && !event.getAuthor().getName().equals("JamesBot")) return;
+
+        if (event.getMessage().getContentDisplay().equals("setup") &&
+                (event.getGuild().getTextChannelsByName(textChannelConfig, true).isEmpty() ||
+                        event.getGuild().getVoiceChannelsByName(voiceChannelConfig, true).isEmpty())) { // TODO -> Move to Properties class or setup
+
+            event.getGuild().createTextChannel(textChannelConfig).queue();
+            event.getGuild().createVoiceChannel(voiceChannelConfig).queue();
+            return;
+        }
+
         if (!event.getChannel().getName().equals(textChannelConfig)) return;
+
 
         Guild guild = event.getGuild();
         String content = event.getMessage().getContentRaw();
@@ -65,7 +75,7 @@ public class TextMessages extends ListenerAdapter {
             }
             case "help": {
                 String helpContent = helpReturn(commandFromSounds);
-                String helpFormated = "\u200E\n**Commands:**\n"+">>> " + helpContent;
+                String helpFormated = "\u200E\n**Commands:**\n" + ">>> " + helpContent;
                 channel.sendMessage(helpFormated).queue();
 
                 String id = channel.getLatestMessageId();
