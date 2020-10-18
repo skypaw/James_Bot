@@ -23,6 +23,7 @@ public class Main extends ListenerAdapter {
                 .setToken(System.getenv("botToken"))
                 .addEventListeners(new VoiceMessages())
                 .addEventListeners(new TextMessages())
+                .addEventListeners(new PrivateMessage())
                 .build()
                 .awaitReady();
 
