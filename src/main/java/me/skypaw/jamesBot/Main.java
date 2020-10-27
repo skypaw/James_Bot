@@ -27,6 +27,7 @@ public class Main extends ListenerAdapter {
                 .build()
                 .awaitReady();
 
+        System.out.println("Bot is ready");
     }
 
     private static void configLoad() throws IOException {
@@ -43,6 +44,7 @@ public class Main extends ListenerAdapter {
         basicPropertiesContent.add("GreetingMessageDirectory");
         basicPropertiesContent.add("RandomSoundDirectory");
         basicPropertiesContent.add("VoiceCommandsDirectory");
+        basicPropertiesContent.add("InviteLink");
 
         List<String> basicPropertiesValues = new ArrayList<>();
         basicPropertiesValues.add("Pokój");
@@ -50,6 +52,7 @@ public class Main extends ListenerAdapter {
         basicPropertiesValues.add("sounds\\hi.m4a");
         basicPropertiesValues.add("random");
         basicPropertiesValues.add("sounds");
+        basicPropertiesValues.add("");
 
 
         if (!configFile.exists()) {

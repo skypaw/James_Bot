@@ -279,11 +279,10 @@ public class VoiceMessages extends ListenerAdapter {
         Random random = new Random();
 
         int randomSound = random.nextInt(randomSounds.size());
-        String randomSoundString = String.valueOf(randomSound);
 
         int i = 0;
-        for (String s : randomSoundsName) {
-            if (s.equals(randomSoundString)) {
+        for (String ignored : randomSoundsName) {
+            if (i == randomSound) {
                 loadAndPlay(voiceChannel, randomSounds.get(i));
             }
             i++;
