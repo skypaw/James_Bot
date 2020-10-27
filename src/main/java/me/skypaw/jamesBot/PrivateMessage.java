@@ -4,10 +4,28 @@ package me.skypaw.jamesBot;
 import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
+
 public class PrivateMessage extends ListenerAdapter {
-    private String link = "https://discord.com/api/oauth2/authorize?client_id=743498183950204948&permissions=37088336&scope=bot"; //todo To config
+    private String link;  //todo To config
 
     public PrivateMessage() {
+
+        Properties properties = new Properties();
+        try {
+            File configFile = new File("src\\main\\resources\\config.properties");
+            FileInputStream fileInputStream = new FileInputStream(configFile);
+
+            properties.load(fileInputStream);
+
+            this.link = properties.getProperty("InviteLink");
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
