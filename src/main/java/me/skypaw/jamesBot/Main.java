@@ -1,10 +1,12 @@
 package me.skypaw.jamesBot;
 
 import net.dv8tion.jda.api.AccountType;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.log4j.BasicConfigurator;
 
+import javax.security.auth.login.LoginException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,19 +15,15 @@ import java.util.Properties;
 
 public class Main extends ListenerAdapter {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws LoginException, IOException, InterruptedException {
 
         BasicConfigurator.configure();
         configLoad();
 
 
-        new JDABuilder(AccountType.BOT)
-                .setToken(System.getenv("botToken"))
-                .addEventListeners(new VoiceMessages())
-                .addEventListeners(new TextMessages())
-                .addEventListeners(new PrivateMessage())
-                .build()
-                .awaitReady();
+        JDA api = JDABuilder.createDefault(System.getenv("botToken")).addEventListeners(new VoiceMessages()).addEventListeners(new TextMessages())
+                .addEventListeners(new PrivateMessage()).build().awaitReady();
+
 
         System.out.println("Bot is ready");
     }
