@@ -15,7 +15,7 @@ public class PrivateMessage extends ListenerAdapter {
 
         Properties properties = new Properties();
         try {
-            File configFile = new File("src\\main\\resources\\config.properties");
+            File configFile = new File("src/main/resources/config.properties");
             FileInputStream fileInputStream = new FileInputStream(configFile);
 
             properties.load(fileInputStream);
@@ -35,7 +35,7 @@ public class PrivateMessage extends ListenerAdapter {
 
         String userName = event.getAuthor().getName();
         String content ="\u200E\n**Hey "+userName+ "** :grin: , \nif you want to see me on your server please click the link below! " +
-                "\n\n When I join on your server make sure to write \\\"setup\\\", on any text channel\n >>> " + link;
+                "\n\n When I join on your server make sure to write /\"setup/\", on any text channel\n >>> " + link;
 
 
         event.getAuthor().openPrivateChannel().queue(privateChannel -> {privateChannel.sendMessage(content).queue();});

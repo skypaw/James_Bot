@@ -63,7 +63,7 @@ public class VoiceMessages extends ListenerAdapter {
 
         properties = new Properties();
         try {
-            File configFile = new File("src\\main\\resources\\config.properties");
+            File configFile = new File("src/main/resources/config.properties");
             FileInputStream fileInputStream = new FileInputStream(configFile);
 
 
@@ -117,7 +117,7 @@ public class VoiceMessages extends ListenerAdapter {
      */
 
     private List<String> stringDirectorySeparator(ArrayList<String> list) {
-        String separator = "\\\\";
+        String separator = "\\/";
         String separator1 = "\\.";
         List<String> name = new ArrayList<>();
 
