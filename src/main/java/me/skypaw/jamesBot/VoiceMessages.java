@@ -41,7 +41,6 @@ public class VoiceMessages extends ListenerAdapter {
     private final ArrayList<String> soundsToCommand;
     private final ArrayList<String> randomSounds;
 
-    private final List<String> randomSoundsName;
     final List<String> soundsToCommandName;
 
 
@@ -88,7 +87,6 @@ public class VoiceMessages extends ListenerAdapter {
 
 
         //Dividing directory strings
-        this.randomSoundsName = stringDirectorySeparator(randomSounds);
         this.soundsToCommandName = stringDirectorySeparator(soundsToCommand);
     }
 
@@ -260,7 +258,7 @@ public class VoiceMessages extends ListenerAdapter {
 
     // Method responsible for connecting bot to the channel
     private void connectToFirstVoiceChannel(AudioManager audioManager) {
-        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect() && !audioManager.getGuild().getVoiceChannelsByName("Pokój", true).isEmpty()) {
+        if (!audioManager.isConnected() && !audioManager.isConnected() && !audioManager.getGuild().getVoiceChannelsByName(voiceChannelConfig, true).isEmpty()) {
             for (VoiceChannel voiceChannel : audioManager.getGuild().getVoiceChannelsByName(voiceChannelConfig, true)) {
                 audioManager.openAudioConnection(voiceChannel);
                 break;
@@ -275,18 +273,13 @@ public class VoiceMessages extends ListenerAdapter {
      * Sounds will be waiting to queue in new thread, so the main functionality will be available.
      */
 
-    public int randomPlayer(GuildChannel voiceChannel) {
+    public int randomPlayer(GuildChannel voiceChannel, int i) {
         Random random = new Random();
 
-        int randomSound = random.nextInt(randomSounds.size());
+        loadAndPlay(voiceChannel, randomSounds.get(i));
 
-        int i = 0;
-        for (String ignored : randomSoundsName) {
-            if (i == randomSound) {
-                loadAndPlay(voiceChannel, randomSounds.get(i));
-            }
-            i++;
-        }
+        System.out.println(i);
+        System.out.println(randomSounds);
 
         int min = 60 * 1000 * 12;
         int randomTime = random.nextInt(23) * 1000 * 60 + min;
@@ -302,10 +295,26 @@ public class VoiceMessages extends ListenerAdapter {
         Runnable runnable = () -> {
             while (true) {
                 try {
-                    int timeThread = randomPlayer(event.getChannel());
+                    int i = 0;
+                    while (true) {
+                        int randomSound = randomSounds.size();
+                        int timeThread;
 
-                    Thread.sleep(timeThread);
 
+                        if (i <= randomSound) {
+                            timeThread = randomPlayer(event.getChannel(), i);
+                            i++;
+
+
+                            System.out.println(i);
+                            Thread.sleep(timeThread);
+                        } else {
+                            shuffleRandomSounds();
+                            i = 0;
+                        }
+
+
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -328,6 +337,10 @@ public class VoiceMessages extends ListenerAdapter {
             t = null;
         }
 
+    }
+
+    private void shuffleRandomSounds() {
+        Collections.shuffle(randomSounds);
     }
 
 }
