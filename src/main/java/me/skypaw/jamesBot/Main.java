@@ -30,8 +30,8 @@ public class Main extends ListenerAdapter {
 
     private static void configLoad() throws IOException {
 
-        File configFile = new File("src\\main\\resources\\config.properties");
-        InputStream inputStream = new FileInputStream("src\\main\\resources\\config.properties");
+        File configFile = new File("src/main/resources/config.properties");
+        InputStream inputStream = new FileInputStream("src/main/resources/config.properties");
 
         Properties properties = new Properties();
         properties.load(inputStream);
@@ -47,7 +47,7 @@ public class Main extends ListenerAdapter {
         List<String> basicPropertiesValues = new ArrayList<>();
         basicPropertiesValues.add("Pokój");
         basicPropertiesValues.add("the-grand-tour");
-        basicPropertiesValues.add("sounds\\hi.m4a");
+        basicPropertiesValues.add("sounds/hi.m4a");
         basicPropertiesValues.add("random");
         basicPropertiesValues.add("sounds");
         basicPropertiesValues.add("");
